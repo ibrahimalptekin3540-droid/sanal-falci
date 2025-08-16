@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sanal Falcı</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; }
+        input, select, button, textarea { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 15px; box-sizing: border-box; }
+        #result { white-space: pre-wrap; margin-top: 20px; padding: 15px; border: 1px solid #ddd; background-color: #f9f9f9; }
+        .loading { text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>Sanal Falcın Hazır!</h1>
+    <p>Bilgilerini gir ve fincan fotoğrafını yükle, gerisini ben halledeyim.</p>
+
+    <form id="fal-form">
+        <label for="gender">Cinsiyet:</label>
+        <select id="gender" name="gender" required>
+            <option value="">Seçiniz</option>
+            <option value="Kadın">Kadın</option>
+            <option value="Erkek">Erkek</option>
+            <option value="Belirtmek İstemiyorum">Belirtmek İstemiyorum</option>
+        </select>
+
+        <label for="dob">Doğum Tarihi:</label>
+        <input type="date" id="dob" name="dob" required>
+
+        <label for="image">Fincan Fotoğrafı:</label>
+        <input type="file" id="image" name="image" accept="image/jpeg,image/png" required>
+
+        <button type="submit">Fal Yorumumu Gönder</button>
+    </form>
+
+    <div class="loading" id="loading" style="display: none;">
+        Yorumunuz hazırlanıyor, lütfen bekleyin...
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        const form = document.getElementById('fal-form');
+        const loadingDiv = document.getElementById('loading');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            loadingDiv.style.display = 'block';
+            resultDiv.innerHTML = '';
+
+            const gender = document.getElementById('gender').value;
+            const dob = document.getElementById('dob').value;
+            const imageFile = document.getElementById('image').files[0];
+
+            if (!imageFile) {
+                alert("Lütfen bir fotoğraf yükleyin.");
+                loadingDiv.style.display = 'none';
+                return;
+            }
+
+            // Dosyayı base64'e dönüştürme
+            const reader = new FileReader();
+            reader.readAsDataURL(imageFile);
+            reader.onload = async () => {
+                const base64Image = reader.result.split(',')[1];
+                
+                try {
+                    const response = await fetch('/api/get-comment', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            gender,
+                            dob,
+                            image: base64Image
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP Hata! Durum: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    
+                    if (data.comment) {
+                        resultDiv.innerHTML = '<h3>Fal Yorumunuz:</h3>' + data.comment.replace(/\n/g, '<br>');
+                    } else {
+                        resultDiv.innerHTML = 'Üzgünüz, bir sorun oluştu. Lütfen tekrar deneyin.';
+                    }
+
+                } catch (error) {
+                    console.error('Hata:', error);
+                    resultDiv.innerHTML = 'Bir hata oluştu: ' + error.message;
+                } finally {
+                    loadingDiv.style.display = 'none';
+                }
+            };
+        });
+    </script>
+</body>
+</html>
