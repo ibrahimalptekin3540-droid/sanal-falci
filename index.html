@@ -102,8 +102,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>Sana Özel Fal Yorumun Hazır Güzelim!</h1>
-        <p>Bilgilerini girip fincan fotoğraflarını yükleyebilirsin.</p>
+        <h1>Sanal Falcın Hazır!</h1>
+        <p>Bilgilerini gir ve fincan fotoğrafını yükle, gerisini ben halledeyim.</p>
 
         <form id="fal-form">
             <label for="gender">Cinsiyet:</label>
@@ -117,6 +117,14 @@
             <label for="dob">Doğum Tarihi:</label>
             <input type="date" id="dob" name="dob" required>
 
+            <label for="relationship">İlişki Durumu:</label>
+            <select id="relationship" name="relationship" required>
+                <option value="">Seçiniz</option>
+                <option value="İlişkim Var">İlişkim Var</option>
+                <option value="İlişkim Yok">İlişkim Yok</option>
+                <option value="Karışık">Karışık</option>
+            </select>
+
             <label for="image">Fincan Fotoğrafı:</label>
             <input type="file" id="image" name="image" accept="image/jpeg,image/png" required>
 
@@ -124,7 +132,7 @@
         </form>
 
         <div class="loading" id="loading" style="display: none;">
-            Yorumun hazırlanıyor güzelim...
+            Yorumunuz hazırlanıyor, lütfen bekleyin...
         </div>
 
         <div id="result"></div>
@@ -142,6 +150,8 @@
 
             const gender = document.getElementById('gender').value;
             const dob = document.getElementById('dob').value;
+            // YENİ EK: İlişki Durumu bilgisini al
+            const relationship = document.getElementById('relationship').value;
             const imageFile = document.getElementById('image').files[0];
 
             if (!imageFile) {
@@ -164,6 +174,7 @@
                         body: JSON.stringify({
                             gender,
                             dob,
+                            relationship, // YENİ EK: İlişki Durumu bilgisini gönder
                             image: base64Image
                         })
                     });
@@ -175,7 +186,7 @@
                     const data = await response.json();
                     
                     if (data.comment) {
-                        resultDiv.innerHTML = '<h3>Sana Özel Fal Yorumun:</h3>' + data.comment.replace(/\n/g, '<br>');
+                        resultDiv.innerHTML = '<h3>Fal Yorumunuz:</h3>' + data.comment.replace(/\n/g, '<br>');
                     } else {
                         resultDiv.innerHTML = 'Üzgünüz, bir sorun oluştu. Lütfen tekrar deneyin.';
                     }
