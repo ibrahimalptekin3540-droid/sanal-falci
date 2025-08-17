@@ -10,31 +10,31 @@
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #667eea, #764ba2); /* Canlı gradyan arka plan */
-            color: #fff; /* Metin rengi beyaz */
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px; /* Mobil uyumluluk için kenar boşluğu */
+            padding: 20px;
             box-sizing: border-box;
         }
 
         .container {
-            background-color: rgba(255, 255, 255, 0.9); /* Yarı saydam beyaz контейнер */
+            background-color: rgba(255, 255, 255, 0.9);
             padding: 40px;
             border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); /* Daha belirgin gölge */
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             max-width: 600px;
             width: 100%;
             box-sizing: border-box;
             text-align: center;
-            color: #333; /* контейнер içindeki metin rengi */
+            color: #333;
         }
 
         h1 {
-            color: #5e2ced; /* Canlı başlık rengi */
+            color: #5e2ced;
             font-weight: 600;
             margin-bottom: 15px;
             font-size: 2.5em;
@@ -57,7 +57,7 @@
         }
 
         input, select, button {
-            width: calc(100% - 24px); /* İç boşlukları hesaba katar */
+            width: calc(100% - 24px);
             padding: 12px;
             border: 1px solid #ced4da;
             border-radius: 8px;
@@ -74,7 +74,7 @@
         }
 
         button {
-            background-color: #007bff; /* Canlı buton rengi */
+            background-color: #007bff;
             color: white;
             border: none;
             cursor: pointer;
@@ -121,7 +121,7 @@
 <body>
     <div class="container">
         <h1>Sana Özel Fal Yorumun Hazır Güzelim!</h1>
-        <p>Bilgileri girip fincan fotoğraflarını yükleyebilirsin.</p>
+        <p>Bilgilerini girip fincan fotoğraflarını yükleyebilirsin.</p>
 
         <form id="fal-form">
             <label for="gender">Cinsiyet:</label>
@@ -143,14 +143,14 @@
                 <option value="Karışık">Karışık</option>
             </select>
 
-            <label for="image">Fincan Fotoğrafı:</label>
-            <input type="file" id="image" name="image" accept="image/jpeg,image/png" required>
+            <label for="image">Fincan Fotoğrafları (En fazla 5 adet):</label>
+            <input type="file" id="image" name="image" accept="image/jpeg,image/png" multiple required>
 
             <button type="submit">Fal Yorumumu Gönder</button>
         </form>
 
         <div class="loading" id="loading" style="display: none;">
-            Yorumun Hazırlanıyor Güzelim...
+            Yorumun hazırlanıyor güzelim...
         </div>
 
         <div id="result"></div>
@@ -169,53 +169,69 @@
             const gender = document.getElementById('gender').value;
             const dob = document.getElementById('dob').value;
             const relationship = document.getElementById('relationship').value;
-            const imageFile = document.getElementById('image').files === null ? null : document.getElementById('image').files.length > 0 ? document.getElementById('image').files.item(0) : null;
+            const imageFiles = document.getElementById('image').files;
 
-
-            if (!imageFile) {
-                alert("Lütfen bir fotoğraf yükleyin.");
+            if (imageFiles.length === 0) {
+                alert("Lütfen en az bir fotoğraf yükleyin.");
                 loadingDiv.style.display = 'none';
                 return;
             }
 
-            const reader = new FileReader();
-            reader.readAsDataURL(imageFile);
-            reader.onload = async () => {
-                const base64Image = reader.result.split(',')[1];
+            if (imageFiles.length > 5) {
+                alert("En fazla 5 fotoğraf yükleyebilirsiniz.");
+                loadingDiv.style.display = 'none';
+                return;
+            }
+            
+            const base64Images = [];
+            const readerPromises = [];
 
-                try {
-                    const response = await fetch('/api/get-comment', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            gender,
-                            dob,
-                            relationship,
-                            image: base64Image
-                        })
-                    });
+            for (let i = 0; i < imageFiles.length; i++) {
+                const file = imageFiles[i];
+                const reader = new FileReader();
+                readerPromises.push(new Promise((resolve) => {
+                    reader.onload = () => {
+                        base64Images.push(reader.result.split(',')[1]);
+                        resolve();
+                    };
+                    reader.readAsDataURL(file);
+                }));
+            }
 
-                    if (!response.ok) {
-                        throw new Error(`HTTP Hata! Durum: ${response.status}`);
-                    }
+            await Promise.all(readerPromises);
 
-                    const data = await response.json();
+            try {
+                const response = await fetch('/api/get-comment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        gender,
+                        dob,
+                        relationship,
+                        images: base64Images
+                    })
+                });
 
-                    if (data.comment) {
-                        resultDiv.innerHTML = '<h3>Sana Özel Fal Yorumun:</h3>' + data.comment.replace(/\n/g, '<br>');
-                    } else {
-                        resultDiv.innerHTML = 'Üzgünüz, bir sorun oluştu. Lütfen tekrar deneyin.';
-                    }
-
-                } catch (error) {
-                    console.error('Hata:', error);
-                    resultDiv.innerHTML = 'Bir hata oluştu: ' + error.message;
-                } finally {
-                    loadingDiv.style.display = 'none';
+                if (!response.ok) {
+                    throw new Error(`HTTP Hata! Durum: ${response.status}`);
                 }
-            };
+
+                const data = await response.json();
+                
+                if (data.comment) {
+                    resultDiv.innerHTML = '<h3>Fal Yorumun:</h3>' + data.comment.replace(/\n/g, '<br>');
+                } else {
+                    resultDiv.innerHTML = 'Üzgünüz, bir sorun oluştu. Lütfen tekrar deneyin.';
+                }
+
+            } catch (error) {
+                console.error('Hata:', error);
+                resultDiv.innerHTML = 'Bir hata oluştu: ' + error.message;
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
         });
     </script>
 </body>
