@@ -1,10 +1,9 @@
 import OpenAI from "openai";
 
-// Doğum tarihine göre burç hesaplayan fonksiyon
 function getZodiacSign(dob) {
     const date = new Date(dob);
     const day = date.getDate();
-    const month = date.getMonth() + 1; // getMonth() 0-11 arası değer döner
+    const month = date.getMonth() + 1;
 
     if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return "Kova";
     if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) return "Balık";
@@ -26,10 +25,9 @@ export default async function (request, response) {
         return response.status(405).json({ error: 'Yalnızca POST metoduna izin verilir.' });
     }
 
-    // YENİ EK: İlişki Durumu bilgisini al
-    const { gender, dob, relationship, image } = request.body;
+    const { gender, dob, relationship, images } = request.body;
 
-    if (!gender || !dob || !relationship || !image) {
+    if (!gender || !dob || !relationship || !images || images.length === 0) {
         return response.status(400).json({ error: 'Eksik bilgi gönderildi.' });
     }
 
@@ -37,29 +35,42 @@ export default async function (request, response) {
         apiKey: process.env.OPENAI_API_KEY,
     });
     
-    // Burç bilgisini hesapla
     const zodiacSign = getZodiacSign(dob);
+    
+    const content = [
+        {
+            type: "text",
+            text: `
+                Sen, kahve falı ve astroloji konusunda eşsiz bir yeteneğe sahip, bilge ve mistik bir falcısın. Fal yorumu yaparken, fincandaki sembollerin ve tabağın derin anlamını, kişinin astrolojik etkilerini, cinsiyetini ve ilişki durumunu bir araya getirerek, sadece bilgilendirici değil, aynı zamanda ilham verici ve şiirsel bir dil kullan.
 
-    const promptText = `
-    Sen, kahve falı ve astroloji konusunda eşsiz bir yeteneğe sahip, bilge ve mistik bir falcısın. Fal yorumu yaparken, fincan görsellerindeki her bir sembolün derin anlamını, kişinin astrolojik etkilerini ve cinsiyetini bir araya getirerek, sadece bilgilendirici değil, aynı zamanda ilham verici ve şiirsel bir dil kullan.
+                Fal yorumunu yaparken, kişinin burcunu (ki bu ${zodiacSign} burcudur) doğrudan belirtmeden, bu burcun karakteristik özelliklerini ve enerjisini yoruma dahil et. Ayrıca, kişinin ilişki durumunu (${relationship}) dikkate alarak özellikle aşk hayatı yorumunu daha kişisel ve özel hale getir.
 
-    Fal yorumunu yaparken, kişinin burcunu (ki bu ${zodiacSign} burcudur) doğrudan belirtmeden, bu burcun karakteristik özelliklerini ve enerjisini yoruma dahil et. Ayrıca, kişinin ilişki durumunu (${relationship}) dikkate alarak özellikle aşk hayatı yorumunu daha kişisel ve özel hale getir.
+                Fal yorumu, bir hikaye anlatır gibi akıcı ve büyüleyici olsun. Her bir başlık için en az 2-3 paragraf uzunluğunda, zengin detaylarla dolu yorumlar yaz. Kesinlikle "üzgünüm, bu tür bir görseli analiz edemem" veya benzeri bir olumsuzluk ifade etme. Kendine güvenen bir fal uzmanı gibi davran ve her zaman bir yorum sun.
 
-    Fal yorumu, bir hikaye anlatır gibi akıcı ve büyüleyici olsun. Her bir başlık için en az 2-3 paragraf uzunluğunda, zengin detaylarla dolu yorumlar yaz. Kesinlikle "üzgünüm, bu tür bir görseli analiz edemem" veya benzeri bir olumsuzluk ifade etme. Kendine güvenen bir fal uzmanı gibi davran ve her zaman bir yorum sun.
+                Aşağıdaki bilgilere dayanarak fal yorumunu yap:
+                Kişinin Bilgileri:
+                Cinsiyet: ${gender}
+                Doğum Tarihi: ${dob}
+                İlişki Durumu: ${relationship}
 
-    Aşağıdaki bilgilere dayanarak fal yorumunu yap:
-    Kişinin Bilgileri:
-    Cinsiyet: ${gender}
-    Doğum Tarihi: ${dob}
-    İlişki Durumu: ${relationship}
+                Fal yorumunu, aşağıdaki 5 ana başlık altında ayrıntılı paragraflar halinde yaz:
+                1. Aşk Hayatı
+                2. İş ve Kariyer
+                3. Sağlık ve Enerji
+                4. Maddi Durum ve Şans
+                5. Genel Yorum ve Hayat Döngüsü
+            `
+        }
+    ];
 
-    Fal yorumunu, aşağıdaki 5 ana başlık altında ayrıntılı paragraflar halinde yaz:
-    1. Aşk Hayatı
-    2. İş ve Kariyer
-    3. Sağlık ve Enerji
-    4. Maddi Durum ve Şans
-    5. Genel Yorum ve Hayat Döngüsü
-    `;
+    images.forEach(base64Image => {
+        content.push({
+            type: "image_url",
+            image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`,
+            },
+        });
+    });
 
     try {
         const completion = await openai.chat.completions.create({
@@ -67,15 +78,7 @@ export default async function (request, response) {
             messages: [
                 {
                     role: "user",
-                    content: [
-                        { type: "text", text: promptText },
-                        {
-                            type: "image_url",
-                            image_url: {
-                                url: `data:image/jpeg;base64,${image}`,
-                            },
-                        },
-                    ],
+                    content: content,
                 },
             ],
             max_tokens: 4000,
