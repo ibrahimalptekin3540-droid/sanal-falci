@@ -150,7 +150,6 @@
 
             const gender = document.getElementById('gender').value;
             const dob = document.getElementById('dob').value;
-            // YENİ EK: İlişki Durumu bilgisini al
             const relationship = document.getElementById('relationship').value;
             const imageFile = document.getElementById('image').files[0];
 
@@ -174,7 +173,7 @@
                         body: JSON.stringify({
                             gender,
                             dob,
-                            relationship, // YENİ EK: İlişki Durumu bilgisini gönder
+                            relationship,
                             image: base64Image
                         })
                     });
