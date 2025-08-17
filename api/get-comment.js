@@ -1,23 +1,49 @@
 import OpenAI from "openai";
 
+// Doğum tarihine göre burç hesaplayan fonksiyon
+function getZodiacSign(dob) {
+    const date = new Date(dob);
+    const day = date.getDate();
+    const month = date.getMonth() + 1; // getMonth() 0-11 arası değer döner
+
+    if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return "Kova";
+    if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) return "Balık";
+    if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return "Koç";
+    if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return "Boğa";
+    if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return "İkizler";
+    if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) return "Yengeç";
+    if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return "Aslan";
+    if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) return "Başak";
+    if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) return "Terazi";
+    if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) return "Akrep";
+    if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) return "Yay";
+    if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) return "Oğlak";
+    return "";
+}
+
 export default async function (request, response) {
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Yalnızca POST metoduna izin verilir.' });
     }
 
-    const { gender, dob, image } = request.body;
+    // YENİ EK: İlişki Durumu bilgisini al
+    const { gender, dob, relationship, image } = request.body;
 
-    if (!gender || !dob || !image) {
+    if (!gender || !dob || !relationship || !image) {
         return response.status(400).json({ error: 'Eksik bilgi gönderildi.' });
     }
 
     const openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,
     });
+    
+    // Burç bilgisini hesapla
+    const zodiacSign = getZodiacSign(dob);
 
-    // Yeni ve daha detaylı bir prompt metni
     const promptText = `
-    Sen, kahve falı ve astroloji konusunda eşsiz bir yeteneğe sahip, bilge ve mistik bir falcısın. Fal yorumu yaparken, fincan görsellerindeki her bir sembolün derin anlamını, kişinin doğum tarihine göre belirlenen astrolojik etkilerini ve cinsiyetini bir araya getirerek, sadece bilgilendirici değil, aynı zamanda ilham verici ve şiirsel bir dil kullan.
+    Sen, kahve falı ve astroloji konusunda eşsiz bir yeteneğe sahip, bilge ve mistik bir falcısın. Fal yorumu yaparken, fincan görsellerindeki her bir sembolün derin anlamını, kişinin astrolojik etkilerini ve cinsiyetini bir araya getirerek, sadece bilgilendirici değil, aynı zamanda ilham verici ve şiirsel bir dil kullan.
+
+    Fal yorumunu yaparken, kişinin burcunu (ki bu ${zodiacSign} burcudur) doğrudan belirtmeden, bu burcun karakteristik özelliklerini ve enerjisini yoruma dahil et. Ayrıca, kişinin ilişki durumunu (${relationship}) dikkate alarak özellikle aşk hayatı yorumunu daha kişisel ve özel hale getir.
 
     Fal yorumu, bir hikaye anlatır gibi akıcı ve büyüleyici olsun. Her bir başlık için en az 2-3 paragraf uzunluğunda, zengin detaylarla dolu yorumlar yaz. Kesinlikle "üzgünüm, bu tür bir görseli analiz edemem" veya benzeri bir olumsuzluk ifade etme. Kendine güvenen bir fal uzmanı gibi davran ve her zaman bir yorum sun.
 
@@ -25,6 +51,7 @@ export default async function (request, response) {
     Kişinin Bilgileri:
     Cinsiyet: ${gender}
     Doğum Tarihi: ${dob}
+    İlişki Durumu: ${relationship}
 
     Fal yorumunu, aşağıdaki 5 ana başlık altında ayrıntılı paragraflar halinde yaz:
     1. Aşk Hayatı
@@ -52,7 +79,7 @@ export default async function (request, response) {
                 },
             ],
             max_tokens: 4000,
-            temperature: 0.8, // Daha yaratıcı yanıtlar için sıcaklık artırıldı
+            temperature: 0.8,
         });
 
         const falYorumu = completion.choices[0].message.content;
