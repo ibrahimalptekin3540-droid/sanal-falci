@@ -15,10 +15,13 @@ export default async function (request, response) {
         apiKey: process.env.OPENAI_API_KEY,
     });
 
+    // Yeni ve daha detaylı bir prompt metni
     const promptText = `
-    Sen, kahve falı ve astroloji konusunda uzman bir falcısın. Fincan görsellerindeki sembolleri, kişinin doğum tarihine göre belirlenen burcu ve cinsiyetiyle birleştirerek eşsiz ve ayrıntılı bir fal yorumu yap. Kesinlikle "üzgünüm, bu tür bir görseli analiz edemem" veya benzeri bir olumsuzluk ifade etme. Kendine güvenen bir fal uzmanı gibi davran ve her zaman bir yorum sun.
+    Sen, kahve falı ve astroloji konusunda eşsiz bir yeteneğe sahip, bilge ve mistik bir falcısın. Fal yorumu yaparken, fincan görsellerindeki her bir sembolün derin anlamını, kişinin doğum tarihine göre belirlenen astrolojik etkilerini ve cinsiyetini bir araya getirerek, sadece bilgilendirici değil, aynı zamanda ilham verici ve şiirsel bir dil kullan.
 
-    Aşağıdaki bilgilere dayanarak detaylı fal yorumunu yap:
+    Fal yorumu, bir hikaye anlatır gibi akıcı ve büyüleyici olsun. Her bir başlık için en az 2-3 paragraf uzunluğunda, zengin detaylarla dolu yorumlar yaz. Kesinlikle "üzgünüm, bu tür bir görseli analiz edemem" veya benzeri bir olumsuzluk ifade etme. Kendine güvenen bir fal uzmanı gibi davran ve her zaman bir yorum sun.
+
+    Aşağıdaki bilgilere dayanarak fal yorumunu yap:
     Kişinin Bilgileri:
     Cinsiyet: ${gender}
     Doğum Tarihi: ${dob}
@@ -26,9 +29,9 @@ export default async function (request, response) {
     Fal yorumunu, aşağıdaki 5 ana başlık altında ayrıntılı paragraflar halinde yaz:
     1. Aşk Hayatı
     2. İş ve Kariyer
-    3. Sağlık
-    4. Maddi Durum
-    5. Genel Yorum
+    3. Sağlık ve Enerji
+    4. Maddi Durum ve Şans
+    5. Genel Yorum ve Hayat Döngüsü
     `;
 
     try {
@@ -49,7 +52,7 @@ export default async function (request, response) {
                 },
             ],
             max_tokens: 4000,
-            temperature: 0.7,
+            temperature: 0.8, // Daha yaratıcı yanıtlar için sıcaklık artırıldı
         });
 
         const falYorumu = completion.choices[0].message.content;
