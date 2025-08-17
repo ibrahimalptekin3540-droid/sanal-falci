@@ -1,9 +1,0 @@
-{
-  "name": "sanal-falci",
-  "version": "1.0.0",
-  "description": "Yapay zeka ile kahve falı yorumlama uygulaması.",
-  "main": "index.js",
-  "dependencies": {
-    "openai": "^4.0.0"
-  }
-}
