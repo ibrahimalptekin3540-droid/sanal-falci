@@ -10,100 +10,118 @@
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
+            background: linear-gradient(135deg, #667eea, #764ba2); /* Canlı gradyan arka plan */
+            color: #fff; /* Metin rengi beyaz */
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            padding: 20px; /* Mobil uyumluluk için kenar boşluğu */
+            box-sizing: border-box;
         }
 
         .container {
-            background-color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.9); /* Yarı saydam beyaz контейнер */
             padding: 40px;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); /* Daha belirgin gölge */
             max-width: 600px;
             width: 100%;
             box-sizing: border-box;
             text-align: center;
+            color: #333; /* контейнер içindeki metin rengi */
         }
 
         h1 {
-            color: #2c3e50;
+            color: #5e2ced; /* Canlı başlık rengi */
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 2.5em;
         }
 
         p {
-            color: #7f8c8d;
-            margin-bottom: 25px;
+            color: #6c757d;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            line-height: 1.7;
         }
 
         label {
             display: block;
             text-align: left;
-            margin-top: 15px;
-            margin-bottom: 5px;
+            margin-top: 20px;
+            margin-bottom: 8px;
             font-weight: 600;
-            color: #555;
+            color: #495057;
         }
 
         input, select, button {
-            width: 100%;
+            width: calc(100% - 24px); /* İç boşlukları hesaba katar */
             padding: 12px;
-            border: 1px solid #ddd;
+            border: 1px solid #ced4da;
             border-radius: 8px;
             box-sizing: border-box;
             font-size: 16px;
-            transition: all 0.3s ease;
+            transition: border-color 0.3s ease;
+            margin-bottom: 15px;
         }
 
         input:focus, select:focus {
-            border-color: #2980b9;
-            box-shadow: 0 0 5px rgba(41, 128, 185, 0.2);
+            border-color: #007bff;
             outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
         }
 
         button {
-            background-color: #3498db;
+            background-color: #007bff; /* Canlı buton rengi */
             color: white;
             border: none;
             cursor: pointer;
-            margin-top: 25px;
+            padding: 14px 24px;
+            border-radius: 8px;
             font-weight: 600;
             letter-spacing: 1px;
             text-transform: uppercase;
+            transition: background-color 0.3s ease;
         }
 
         button:hover {
-            background-color: #2980b9;
+            background-color: #0056b3;
         }
         
-        #result { 
-            white-space: pre-wrap; 
-            margin-top: 25px; 
-            padding: 20px; 
-            border: 1px solid #e0e0e0; 
-            background-color: #fcfcfc; 
-            border-radius: 8px; 
+        #result {
+            white-space: pre-wrap;
+            margin-top: 30px;
+            padding: 25px;
+            border: 1px solid #d1d8e0;
+            background-color: #f8f9fa;
+            border-radius: 8px;
             text-align: left;
-            line-height: 1.6;
+            line-height: 1.7;
+            color: #495057;
+        }
+
+        #result h3 {
+            color: #5e2ced;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-weight: 600;
         }
 
         .loading {
             text-align: center;
-            margin-top: 25px;
-            color: #3498db;
+            margin-top: 30px;
+            color: #007bff;
             font-style: italic;
+            font-size: 1.1em;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Sanal Falcın Hazır!</h1>
-        <p>Bilgilerini gir ve fincan fotoğrafını yükle, gerisini ben halledeyim.</p>
+        <h1>Sana Özel Fal Yorumun Hazır Güzelim!</h1>
+        <p>Bilgileri girip fincan fotoğraflarını yükleyebilirsin.</p>
 
         <form id="fal-form">
             <label for="gender">Cinsiyet:</label>
@@ -132,7 +150,7 @@
         </form>
 
         <div class="loading" id="loading" style="display: none;">
-            Yorumunuz hazırlanıyor, lütfen bekleyin...
+            Yorumun Hazırlanıyor Güzelim...
         </div>
 
         <div id="result"></div>
@@ -151,7 +169,8 @@
             const gender = document.getElementById('gender').value;
             const dob = document.getElementById('dob').value;
             const relationship = document.getElementById('relationship').value;
-            const imageFile = document.getElementById('image').files[0];
+            const imageFile = document.getElementById('image').files === null ? null : document.getElementById('image').files.length > 0 ? document.getElementById('image').files.item(0) : null;
+
 
             if (!imageFile) {
                 alert("Lütfen bir fotoğraf yükleyin.");
@@ -163,7 +182,7 @@
             reader.readAsDataURL(imageFile);
             reader.onload = async () => {
                 const base64Image = reader.result.split(',')[1];
-                
+
                 try {
                     const response = await fetch('/api/get-comment', {
                         method: 'POST',
@@ -183,9 +202,9 @@
                     }
 
                     const data = await response.json();
-                    
+
                     if (data.comment) {
-                        resultDiv.innerHTML = '<h3>Fal Yorumunuz:</h3>' + data.comment.replace(/\n/g, '<br>');
+                        resultDiv.innerHTML = '<h3>Sana Özel Fal Yorumun:</h3>' + data.comment.replace(/\n/g, '<br>');
                     } else {
                         resultDiv.innerHTML = 'Üzgünüz, bir sorun oluştu. Lütfen tekrar deneyin.';
                     }
